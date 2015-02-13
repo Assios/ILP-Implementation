@@ -1,65 +1,89 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 import string
-
-
-'''
-This class organizes the facts.
-'''
 
 variables = {}
 
-class Fact():
-	def __init__(self, string):
-		s = string.replace(" ", "").split('(')
-		self.functor, self.args = s[0], s[1][:-1].split(',')
-		self.arity = len(self.args)
-		self.unknowns = len([arg for arg in self.args if arg.isupper()])
 
-	def __str__(self):
-		return self.functor + '(' +', '.join(self.args) +')'
+class Fact:
 
+    def __init__(self, string):
+        s = string.replace(' ', '').split('(')
+        (self.functor, self.args) = (s[0], (s[1])[:-1].split(','))
+        self.arity = len(self.args)
+        self.unknowns = len([arg for arg in self.args if arg.isupper()])
 
-a = Fact("dad(alice,bill)")
+    def __str__(self):
+        return self.functor + '(' + ', '.join(self.args) + ')'
 
-b = Fact("mother(mary,john)")
+############################################
+#####      TESTING TERMS        ############
 
-f = Fact("yo(george, obama)")
+a = Fact('dad(alice,bill)')
 
-c = Fact("yo(jane,james)")
+b = Fact('mother(mary,john)')
 
-d = Fact("yo(jane, X)")
+f = Fact('yo(george, obama)')
 
-e = Fact("yo(Y, obama)")
+f = Fact('yo(yomaaan, obama)')
+
+c = Fact('yo(jane,james, johnny)')
+
+d = Fact('yo(jane, X, Y)')
+
+e = Fact('yo(E, obama)')
+
+fail = Fact('yo(Y, X, bill)')
+
+fail2 = Fact('dad(billyyy,johhny)')
 
 facts = [a, f, b, c]
 
 
+###########################################
+
 def unify(fact):
-	functor = fact.functor
-	args = fact.args
-	unknowns = fact.unknowns
+    functor = fact.functor
+    args = fact.args
+    unknowns = fact.unknowns
+    response = False
 
-	print functor, args
+    if unknowns:
 
-	if unknowns:
-		print "UNKNOWN"
+        for f in facts:
+            if functor == f.functor:
 
-		for f in facts:
-			if functor == f.functor:
-				print "MATCH " + functor
-				#Get all known indices
-				indices = [i for i, x in enumerate(args) if not x.isupper()]
-				print "LENGTH: " + str(len(indices))
-				for i in indices:
-					if args[i]==f.args[i]:
-						unknown = [i for i, x in enumerate(args) if x.isupper()]
-						print args[unknown[0]] + " = " + f.args[unknown[0]]
-						variables[args[unknown[0]]] = f.args[unknown[0]]
+                var = equal(args, f.args)
+                if var:
+                    variables.update(var)
+                    response = True
+    else:
+        if fact in facts:
+            return True
 
-	else:
-		if fact not in facts:
-			return False
+    return response
 
+
+'''
+Checks if two arrays are equal if we ignore uppercase characters.
+If they are, all uppercase-lowercase pairs are returned.
+
+'''
+
+def equal(arr1, arr2):
+    match = {}
+
+    if len(arr1) != len(arr2):
+        return False
+
+    for i in range(len(arr1)):
+        if arr1[i].islower() and arr1[i] != arr2[i]:
+            return False
+        if arr1[i].isupper():
+            match[arr1[i]] = arr2[i]
+
+    return match
+
+
+def print_vars():
 	print variables
-	return True
-
-
