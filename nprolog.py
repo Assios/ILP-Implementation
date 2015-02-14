@@ -23,15 +23,14 @@ a = Fact('dad(alice,bill)')
 
 b = Fact('mother(mary,john)')
 
-f = Fact('yo(george, obama)')
-
 f = Fact('yo(yomaaan, obama)')
 
 c = Fact('yo(jane,james, johnny)')
 
+e = Fact('yo(jane,peter, johnny)')
+
 d = Fact('yo(jane, X, Y)')
 
-e = Fact('yo(E, obama)')
 
 fail = Fact('yo(Y, X, bill)')
 
@@ -40,7 +39,8 @@ fail2 = Fact('dad(billyyy,johhny)')
 facts = [a, f, b, c]
 
 
-###########################################
+#############################################
+
 
 def unify(fact):
     functor = fact.functor
@@ -71,10 +71,11 @@ If they are, all uppercase-lowercase pairs are returned.
 '''
 
 def equal(arr1, arr2):
-    match = {}
 
     if len(arr1) != len(arr2):
         return False
+
+    match = {}
 
     for i in range(len(arr1)):
         if arr1[i].islower() and arr1[i] != arr2[i]:
