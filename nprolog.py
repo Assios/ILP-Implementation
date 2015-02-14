@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
 import string
 
 variables = {}
@@ -16,6 +17,29 @@ class Fact:
     def __str__(self):
         return self.functor + '(' + ', '.join(self.args) + ')'
 
+
+class Rule:
+
+	def __init__(self, string):
+		s = string.replace(' ', '').split(':-')
+		self.goal = Fact(s[0])
+		self.subgoals = s[1].split('),')
+		self.dict = {}
+
+		for i in range(len(self.subgoals)):
+			if self.subgoals[i][-1]!=')':
+				self.subgoals[i]+=')'
+
+		self.subgoals = [Fact(subgoal) for subgoal in self.subgoals]
+
+		self.dict[self.goal] = self.subgoals
+
+	def __str__(self):
+		return self.goal.functor + '(' + ', '.join(self.goal.args) + ') :- ' + \
+		''.join([subgoal.functor + '(' + ', '.join(subgoal.args) + \
+		'),' for subgoal in self.subgoals])[:-1]
+
+
 ############################################
 #####      TESTING TERMS        ############
 
@@ -30,7 +54,6 @@ c = Fact('yo(jane,james, johnny)')
 e = Fact('yo(jane,peter, johnny)')
 
 d = Fact('yo(jane, X, Y)')
-
 
 fail = Fact('yo(Y, X, bill)')
 
