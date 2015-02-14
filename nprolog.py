@@ -39,9 +39,12 @@ class Rule:
 		''.join([subgoal.functor + '(' + ', '.join(subgoal.args) + \
 		'),' for subgoal in self.subgoals])[:-1]
 
-
 ############################################
 #####      TESTING TERMS        ############
+
+rule1 = Rule('mortal(X):-human(X)')
+
+cat = Fact('katt(tom)')
 
 a = Fact('dad(alice,bill)')
 
@@ -59,7 +62,13 @@ fail = Fact('yo(Y, X, bill)')
 
 fail2 = Fact('dad(billyyy,johhny)')
 
-facts = [a, f, b, c]
+sokrates = Fact('human(sokrates)')
+
+facts = [a, f, b, c, cat, sokrates]
+
+rules = [rule1]
+
+sokr = Fact("mortal(sokrates)")
 
 
 #############################################
@@ -85,6 +94,22 @@ def unify(fact):
             return True
 
     return response
+
+
+def search(fact):
+	if unify(fact):
+		return True
+	else:
+		for rule in rules:
+			if fact.functor==rule.goal.functor:
+				for subgoal in rule.subgoals:
+					print subgoal
+					print subgoal.functor+'('+fact.args[0]+')'
+					temp = Fact(subgoal.functor+'('+fact.args[0]+')')
+					print temp
+					print sokrates
+					if unify(temp):
+						return True
 
 
 '''
