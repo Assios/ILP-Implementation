@@ -90,8 +90,9 @@ def unify(fact):
                     variables.update(var)
                     response = True
     else:
-        if fact in facts:
-            return True
+        for f in facts:
+        	if f.functor==fact.functor and f.args==fact.args:
+        		return True
 
     return response
 
@@ -103,11 +104,9 @@ def search(fact):
 		for rule in rules:
 			if fact.functor==rule.goal.functor:
 				for subgoal in rule.subgoals:
-					print subgoal
-					print subgoal.functor+'('+fact.args[0]+')'
-					temp = Fact(subgoal.functor+'('+fact.args[0]+')')
-					print temp
-					print sokrates
+
+					temp = Fact(subgoal.functor+'('+','.join(fact.args)+')')
+
 					if unify(temp):
 						return True
 
