@@ -32,6 +32,8 @@ class Rule:
 
 		self.subgoals = [Fact(subgoal) for subgoal in self.subgoals]
 
+		self.subgoals_count = len(self.subgoals)
+
 		self.dict[self.goal] = self.subgoals
 
 	def __str__(self):
@@ -42,33 +44,14 @@ class Rule:
 ############################################
 #####      TESTING TERMS        ############
 
-rule1 = Rule('mortal(X):-human(X)')
+rule = Rule('animal(Y,X):-cat(X,Y)')
 
-cat = Fact('katt(tom)')
+cat = Fact('cat(tom,john)')
+tom=D
+john=Z
+facts = [cat]
 
-a = Fact('dad(alice,bill)')
-
-b = Fact('mother(mary,john)')
-
-f = Fact('yo(yomaaan, obama)')
-
-c = Fact('yo(jane,james, johnny)')
-
-e = Fact('yo(jane,peter, johnny)')
-
-d = Fact('yo(jane, X, Y)')
-
-fail = Fact('yo(Y, X, bill)')
-
-fail2 = Fact('dad(billyyy,johhny)')
-
-sokrates = Fact('human(sokrates)')
-
-facts = [a, f, b, c, cat, sokrates]
-
-rules = [rule1]
-
-sokr = Fact("mortal(sokrates)")
+rules = [rule]
 
 
 #############################################
@@ -105,7 +88,12 @@ def search(fact):
 			if fact.functor==rule.goal.functor:
 				for subgoal in rule.subgoals:
 
+					if not subgoal.arity==fact.arity:
+						return False
+
 					temp = Fact(subgoal.functor+'('+','.join(fact.args)+')')
+
+					print temp
 
 					if unify(temp):
 						return True
@@ -129,6 +117,7 @@ def equal(arr1, arr2):
             return False
         if arr1[i].isupper():
             match[arr1[i]] = arr2[i]
+            print arr1[i] + ' = ' + arr2[i]
 
     return match
 
