@@ -1,6 +1,6 @@
 # ILP implementation
 
-An implementation of intuitionistic logic programming in Python, based on this paper (Nprolog-link).
+An implementation of intuitionistic logic programming in Python, based on this [paper].
 ## Usage
 ```sh
 $ python nprolog.py file.npro
@@ -13,3 +13,5 @@ This implementation uses a regular Prolog syntax, with some changes to support i
 ## Intuitionistic Logic 
 
 Litt info om det her
+
+[paper]:http://www.sciencedirect.com/science/article/pii/0743106684900293

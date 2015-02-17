@@ -38,6 +38,8 @@ class Rule:
         self.subgoals = s[1].split('),')
         self.dict = {}
 
+        print self.subgoals
+
         for i in range(len(self.subgoals)):
             if self.subgoals[i][-1] != ')':
                 self.subgoals[i] += ')'
@@ -101,20 +103,16 @@ def search(fact):
         for rule in rulebase:
             if fact.functor == rule.goal.functor:
                 for subgoal in rule.subgoals:
-
-                    if not subgoal.arity == fact.arity:
-                        return False
-
+                    
                     fact.args = [fact.args[i] for i in
-                                 [subgoal.args.index(rule.goal.args[i])
-                                 for i in range(len(rule.goal.args))]]
+                                 [rule.goal.args.index(subgoal.args[i])
+                                 for i in range(len(subgoal.args))]]
 
                     temp = Fact(subgoal.functor + '('
                                 + ','.join(fact.args) + ')')
 
                     if unify(temp):
                         return True
-
 
 def equal(arr1, arr2):
     """
