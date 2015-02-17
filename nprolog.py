@@ -65,8 +65,6 @@ def unify(fact):
     args = fact.args
     unknowns = fact.unknowns
     response = False
-    global question
-    question = False
 
     if unknowns:
 
@@ -74,14 +72,18 @@ def unify(fact):
             if functor == f.functor:
 
                 var = equal(args, f.args)
+
                 if var:
                     variables.update(var)
+
+                    for key, value in var.iteritems():
+                        print(key + " = " + value)
+
                     response = True
     else:
 
         for f in facts:
             if f.functor == fact.functor and f.args == fact.args:
-                question = True
                 return True
 
     return response
@@ -131,7 +133,6 @@ def equal(arr1, arr2):
             return False
         if arr1[i].isupper():
             match[arr1[i]] = arr2[i]
-            print arr1[i] + ' = ' + arr2[i]
 
     return match
 
@@ -146,6 +147,8 @@ def parse(file=sys.argv[1]):
 
     for (linenumber, line) in enumerate(f):
         line = line.replace(' ', '').strip()
+
+        if line[-1]=='.': line=line[0:-1]
 
         if not line[0].islower():
             continue
@@ -175,9 +178,6 @@ if __name__ == '__main__':
 
         if search(prompt):
             print "yes"
-            continue
-
-        if question:
             continue
 
         print "no"
