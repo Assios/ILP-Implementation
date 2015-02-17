@@ -38,8 +38,6 @@ class Rule:
         self.subgoals = s[1].split('),')
         self.dict = {}
 
-        print self.subgoals
-
         for i in range(len(self.subgoals)):
             if self.subgoals[i][-1] != ')':
                 self.subgoals[i] += ')'
@@ -104,15 +102,38 @@ def search(fact):
             if fact.functor == rule.goal.functor:
                 for subgoal in rule.subgoals:
                     
-                    fact.args = [fact.args[i] for i in
-                                 [rule.goal.args.index(subgoal.args[i])
-                                 for i in range(len(subgoal.args))]]
+                    indices = []
+
+                    # SOME TEMPORARY DIRTY HACKS HERE TO MAKE THIS KIND OF STUFF WORK:
+                    # child(X):-mother(Y,X)
+
+                    for i in range(len(rule.goal.args)):
+                        try:
+                            indices.append(subgoal.args.index(rule.goal.args[i]))
+                        except:
+                            continue
+
+                    if indices[0]>len(fact.args)-1:
+                        fact.args.insert(0, "Y")
+
+                    if "Y" not in fact.args:
+                        fact.args = gen_list(fact.args, indices)
 
                     temp = Fact(subgoal.functor + '('
                                 + ','.join(fact.args) + ')')
 
-                    if unify(temp):
-                        return True
+                    if not unify(temp):
+                        return False
+                return True
+
+
+def gen_list(array, indices):
+    new_list = []
+
+    for i in indices:
+        new_list.append(array[i])
+
+    return new_list
 
 def equal(arr1, arr2):
     """

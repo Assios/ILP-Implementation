@@ -1,5 +1,6 @@
-child(X,Y):-mother(Y,X)
+child(X):-mother(Y,X),female(Y)
 
 mother(mary,john)
+female(mary)
 
 cat(tom)
