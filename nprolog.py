@@ -21,6 +21,7 @@ class Fact:
 
     def __init__(self, string):
         s = string.replace(' ', '').split('(')
+
         (self.functor, self.args) = (s[0], (s[1])[:-1].split(','))
         self.arity = len(self.args)
         self.unknowns = len([arg for arg in self.args if arg.isupper()])
@@ -55,6 +56,11 @@ class Rule:
 
 
 def unify(fact):
+    """
+    Tries to unify a fact with all the facts in the database.
+    Returns False if not possible.
+    """
+
     functor = fact.functor
     args = fact.args
     unknowns = fact.unknowns
@@ -82,6 +88,11 @@ def unify(fact):
 
 
 def search(fact):
+    """
+    If it can't unify a fact directly, derive it
+    from the rulebase.
+    """
+
     if unify(fact):
         return True
     else:
@@ -92,6 +103,10 @@ def search(fact):
                     if not subgoal.arity == fact.arity:
                         return False
 
+                    fact.args = [fact.args[i] for i in
+                                 [subgoal.args.index(rule.goal.args[i])
+                                 for i in range(len(rule.goal.args))]]
+
                     temp = Fact(subgoal.functor + '('
                                 + ','.join(fact.args) + ')')
 
@@ -100,6 +115,11 @@ def search(fact):
 
 
 def equal(arr1, arr2):
+    """
+    Checks if all lowercase elements in the two lists are equal.
+    If they are, return a dictionary that maps the uppercase variables
+    in arr1 to the corresponding variable in arr2.
+    """
 
     if len(arr1) != len(arr2):
         return False
@@ -126,19 +146,14 @@ def parse(file=sys.argv[1]):
 
     for (linenumber, line) in enumerate(f):
         line = line.replace(' ', '').strip()
-        if ':-' in line:
-            try:
-                rule = Rule(line)
-            except ParseError, e:
-                print "Couldn't parse rule on line: " + str(linenumber)
-            rulebase.append(rule)
-        else:
 
-            try:
-                fact = Fact(line)
-            except ParseError, e:
-                print "Couldn't parse rule on line: " + str(linenumber)
-            facts.append(fact)
+        if not line[0].islower():
+            continue
+
+        if ':-' in line:
+            rulebase.append(Rule(line))
+        else:
+            facts.append(Fact(line))
 
 
 if __name__ == '__main__':
@@ -149,7 +164,6 @@ if __name__ == '__main__':
     print 'Rules:'
     for rule in rulebase:
         print rule
-
     print '\nFacts:'
     for fact in facts:
         print fact
@@ -159,7 +173,11 @@ if __name__ == '__main__':
 
         prompt = Fact(raw_input('? '))
 
-        search(prompt)
+        if search(prompt):
+            print "yes"
+            continue
 
         if question:
-            print 'yes'
+            continue
+
+        print "no"
