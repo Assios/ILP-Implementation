@@ -113,14 +113,25 @@ def search(fact):
                         except:
                             continue
 
-                    if indices[0]>len(fact.args)-1:
-                        fact.args.insert(0, "Y")
+                    if indices:
+                        if indices[0]>len(fact.args)-1:
+                            fact.args.insert(0, "Y")
 
                     if "Y" not in fact.args:
                         fact.args = gen_list(fact.args, indices)
 
+                    print subgoal.args
+                    print fact.args
+
+                    if len(fact.args)!=len(subgoal.args):
+                        for element in fact.args:
+                            if element not in subgoal.args:
+                                fact.args.remove(element)
+
                     temp = Fact(subgoal.functor + '('
                                 + ','.join(fact.args) + ')')
+
+                    print variables
 
                     if not unify(temp):
                         return False
