@@ -4,6 +4,7 @@
 import string
 import re
 import sys
+import copy
 
 #variables = {}
 
@@ -28,9 +29,11 @@ class Fact:
         self.env = {}
         self.index = 0
         self.subgoals_count = 0
+        self.parent = None
+        self.goal = self
 
     def __str__(self):
-        return self.functor + '(' + ', '.join(self.args) + ')'
+        return self.functor + '(' + ', '.join(self.args) + ")"
 
     def __eq__(self, other):
         return (self.arity == other.arity and self.functor == other.functor)
@@ -48,7 +51,7 @@ class Rule:
         self.dict = {}
         self.env = {}
         self.index = 0
-        self.parent = False
+        self.parent = None
 
         for i in range(len(self.subgoals)):
             if self.subgoals[i][-1] != ')':
@@ -72,9 +75,8 @@ class Rule:
 
     def __eq__(self, other):
         if isinstance(other, Fact):
-            print "fact in eq: ", other
-            print "rule in eq: ", self
-            return self.goal.functor == other.functor and self.goal.args == other.arity 
+            return self.goal.functor == other.functor and self.goal.args == other.arity
+        if (other == None): return False 
         return (self.goal.functor == other.goal.functor and self.goal.args == other.goal.args)
 
 
@@ -99,13 +101,11 @@ def unify(s_fact, s_env, d_fact, d_env):
                 if (not d_env.get(d_fact.args[i])):
                     d_env[d_fact.args[i]] = sval
                 else: #the variable is set, have to check if it is the same as sval
-                    print "else in variable!!"
                     if (d_env.get(d_fact.args[i]) != sval):
-                        print "d_env.get(d_fact.args[i]) != sval"
                         return 0
-            elif(d_fact.args[i] != s_fact.args[i]):
-                print "d_fact.args[i] != s_fact.args[i]"
+            elif(d_fact.args[i] != sval):
                 return 0
+
     return 1
 
 
@@ -185,14 +185,56 @@ def unify(s_fact, s_env, d_fact, d_env):
 
 
 
+# def search(query):
+#     curr_rules = []
+#     print "search ", query
+#     for rule in rulebase_facts:
+#         if rule.goal.functor == query.functor:
+#             curr_rules.append(rule)
+#     if not len(curr_rules):
+#         return False
+
+#     stack = [curr_rules[0]]
+#     print "stack", curr_rules[0]
+#     while stack:
+#         rule = stack.pop()
+#         print "  pop", rule
+#         if(rule.index >= rule.subgoals_count): #we still have more subgoals to compute
+#             if(rule.parent == None):
+#                 if(rule.env):
+#                     print rule.env
+#                 else:
+#                     print "yes"
+#                 continue
+#             parent = copy.deepcopy(rule.parent)
+#             unify(rule.goal, rule.env, parent.subgoals[parent.index], parent.env)
+#             stack.append(parent)
+#             print "stack parent", parent
+#             parent.index += 1
+#             continue
+
+#         found = False
+#         r = rule.subgoals[rule.index]
+#         for set_rule in rulebase_facts:
+#             if set_rule == r :
+#                 if unify(set_rule, set_rule.env, r, r.env):
+#                     found = True
+#                     print "stack child", r
+#                     stack.append(r)
+#         if(not found): print "no"            
+
+
 def search(query, env={}):
+    print query
+    query = Rule("goal(X,Y) :- " + str(query))
     curr_rules = []
-    for rule in rulebase:
-        if rule.goal.functor == query.functor:
+    for rule in rulebase_facts:
+        if rule.goal.functor == query.subgoals[0].functor:
             curr_rules.append(rule)
     if not len(curr_rules):
         return False
-    stack = [curr_rules.pop()]
+    #curr_rules.append(query)
+    stack = [query]
     while stack:
         print "in while"
         rule = stack.pop()
@@ -223,14 +265,10 @@ def search(query, env={}):
                     continue
             else:
                 print "no parent"
-                print rule.env
-                return True
-
-
-
-
-
-    
+                if rule.env:
+                    print rule.env
+                else:
+                    print "yes"
 
 
 
@@ -307,7 +345,4 @@ if __name__ == '__main__':
         prompt = Fact(raw_input('? '))
 
         if search(prompt):
-            print "yes"
             continue
-
-        print "no"
