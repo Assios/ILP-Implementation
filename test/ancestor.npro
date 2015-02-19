@@ -1,0 +1,13 @@
+mother(alice, bill)
+
+father(tom, bill)
+
+mother(susan, alice)
+
+parent(X,Y):- mother(X,Y)
+
+parent(X,Y):- father(X,Y)
+
+ancestor(X,Y):- parent(X,Y)
+
+ancestor(X,Y):- parent(X,Z), ancestor(Z, Y)

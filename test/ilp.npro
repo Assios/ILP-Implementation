@@ -1,0 +1,12 @@
+friend(snape,ron)
+friend(snape,hermione)
+friend(snape,voldemort)
+
+
+friend(harry,ron)
+friend(harry,hermione)
+
+
+popular(X):- friend(X,ron), friend(X,hermione), friend(X,voldemort)
+
+nearPopular(A, C):- =>( popular(A), friend(A, C) )

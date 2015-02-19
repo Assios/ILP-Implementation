@@ -4,8 +4,13 @@
 import string
 import re
 import sys
+from time import sleep
+import copy
 
-#variables = {}
+# variables = {}
+
+rulebase = []
+yes = False
 
 
 class ParseError(Exception):
@@ -27,27 +32,59 @@ class Fact:
         self.unknowns = len([arg for arg in self.args if arg.isupper()])
         self.env = {}
         self.index = 0
+        self.goal = self
         self.subgoals_count = 0
 
     def __str__(self):
         return self.functor + '(' + ', '.join(self.args) + ')'
 
     def __eq__(self, other):
-        return (self.arity == other.arity and self.functor == other.functor)
+        return self.arity == other.arity and self.functor \
+            == other.functor
 
     def __hash__(self):
         return id(self)
 
 
-class Rule:
+class Hypo:
 
     def __init__(self, string):
+
+        self.string = string
+
+        fields = [f.replace(':-', '').strip() for f in string.split('=>'
+                  )]
+
+        (self.goal, self.hypo) = (fields[0], fields[1])
+
+        self.head = fields[0]
+
+        self.hypo = self.hypo.split('),')
+
+        self.pregoal = (self.hypo[0])[1:] + ')'.strip()
+
+        self.rule = Rule(self.hypo[1].replace('))', ')').strip())
+
+    def __str__(self):
+        return 'Head: ' + self.head + ' Pregoal: ' + self.pregoal \
+            + ' Rule: ' + str(self.rule)
+
+
+class Rule:
+
+    def __init__(
+        self,
+        string,
+        parent=None,
+        env={},
+        ):
         s = string.replace(' ', '').split(':-')
         self.goal = Fact(s[0])
-        self.subgoals = s[1].split('),')
+        self.subgoals = []
+        if len(s) > 1:
+            self.subgoals = s[1].split('),')
         self.dict = {}
         self.env = {}
-        self.index = 0
         self.parent = False
 
         for i in range(len(self.subgoals)):
@@ -55,14 +92,13 @@ class Rule:
                 self.subgoals[i] += ')'
 
         self.subgoals = [Fact(subgoal) for subgoal in self.subgoals]
-        
+
         for sub in self.subgoals:
             sub.parent = self
 
         self.subgoals_count = len(self.subgoals)
 
         self.dict[self.goal] = self.subgoals
-
 
     def __str__(self):
         return self.goal.functor + '(' + ', '.join(self.goal.args) \
@@ -72,167 +108,140 @@ class Rule:
 
     def __eq__(self, other):
         if isinstance(other, Fact):
-            print "fact in eq: ", other
-            print "rule in eq: ", self
-            return self.goal.functor == other.functor and self.goal.args == other.arity 
-        return (self.goal.functor == other.goal.functor and self.goal.args == other.goal.args)
+            print 'fact in eq: ', other
+            print 'rule in eq: ', self
+            return self.goal.functor == other.functor \
+                and self.goal.args == other.arity
+        if not isinstance(other, Hypo):
+            return self.goal.functor == other.goal.functor \
+                and self.goal.args == other.goal.args
 
 
-def unify(s_fact, s_env, d_fact, d_env):
+class Toprule:
+
+    def __init__(
+        self,
+        rule,
+        parent=None,
+        env={},
+        ):
+        self.rule = rule
+        self.parent = parent
+        self.env = copy.deepcopy(env)
+        self.index = 0
+
+
+def unify(
+    s_fact,
+    s_env,
+    d_fact,
+    d_env,
+    ):
     """
-    Tries to unify a fact with all the facts in the database.
+    Tries to unify two facts with their corresponding environment.
     Returns False if not possible.
     """
 
-
-    if len(s_fact.args) != len(d_fact.args) or s_fact.functor != d_fact.functor: return 0
+    if len(s_fact.args) != len(d_fact.args) or s_fact.functor \
+        != d_fact.functor:
+        return True
 
     for i in range(len(s_fact.args)):
-        #if not s_fact.args[i] is a variable, it is a constant
+
+        # if not s_fact.args[i] is a variable, it is a constant
+
         if s_fact.args[i].isupper():
             sval = s_env.get(s_fact.args[i])
         else:
             sval = s_fact.args[i]
-        if(sval):
-            if(d_fact.args[i].isupper()): #variable in dest
-                #if the variable is not set, set it from the sourceval
-                if (not d_env.get(d_fact.args[i])):
+        if sval:
+            if d_fact.args[i].isupper():  # variable in dest
+
+                # if the variable is not set, set it from the sourceval
+
+                if not d_env.get(d_fact.args[i]):
                     d_env[d_fact.args[i]] = sval
-                else: #the variable is set, have to check if it is the same as sval
-                    print "else in variable!!"
-                    if (d_env.get(d_fact.args[i]) != sval):
-                        print "d_env.get(d_fact.args[i]) != sval"
-                        return 0
-            elif(d_fact.args[i] != s_fact.args[i]):
-                print "d_fact.args[i] != s_fact.args[i]"
-                return 0
-    return 1
-
-
-    # functor = fact.functor
-    # args = fact.args
-    # unknowns = fact.unknowns
-    # response = False
-
-    #     if d_fact.functor == s_fact.functor:
-
-    #         var = equal(d_fact.args, s_fact.args)
-
-    #         if var:
-    #             d_env.update(var)
-
-    #             for key, value in var.iteritems():
-    #                 print(key + " = " + value)
-
-    #             response = True
-    # else:
-    #     if s_fact.functor == d_fact.functor and s_fact.args == d_fact.args:
-    #         #update environment
-    #         for arg in s_fact.args:
-
-    #         return True
-
-    # return response
-
-
-# def search(fact):
-#     """
-#     If it can't unify a fact directly, derive it
-#     from the rulebase.
-#     """
-
-#     if unify(fact):
-#         return True
-#     else:
-#         for rule in rulebase:
-#             if fact.functor == rule.goal.functor:
-#                 for subgoal in rule.subgoals:
-                    
-#                     indices = []
-
-#                     # SOME TEMPORARY DIRTY HACKS HERE TO MAKE THIS KIND OF STUFF WORK:
-#                     # child(X):-mother(Y,X)
-
-#                     for i in range(len(rule.goal.args)):
-#                         try:
-#                             indices.append(subgoal.args.index(rule.goal.args[i]))
-#                         except:
-#                             continue
-
-#                     if indices:
-#                         if indices[0]>len(fact.args)-1:
-#                             fact.args.insert(0, "Y")
-
-#                     if "Y" not in fact.args:
-#                         fact.args = gen_list(fact.args, indices)
-
-#                     print subgoal.args
-#                     print fact.args
-
-#                     if len(fact.args)!=len(subgoal.args):
-#                         for element in fact.args:
-#                             if element not in subgoal.args:
-#                                 fact.args.remove(element)
-
-#                     temp = Fact(subgoal.functor + '('
-#                                 + ','.join(fact.args) + ')')
-
-#                     print variables
-
-#                     if not unify(temp):
-#                         return False
-#                 return True
-
-
-
-def search(query, env={}):
-    curr_rules = []
-    for rule in rulebase:
-        if rule.goal.functor == query.functor:
-            curr_rules.append(rule)
-    if not len(curr_rules):
-        return False
-    stack = [curr_rules.pop()]
-    while stack:
-        print "in while"
-        rule = stack.pop()
-        if(rule.index < rule.subgoals_count): #we still have more subgoals to compute
-            print "more subgoals"
-            r = rule.subgoals[rule.index]
-
-            for set_rule in rulebase_facts:
-                print "rule: ", set_rule
-                print "r: ", r
-                if set_rule == r:
-                    print "set_rule == r"
-                    if unify(set_rule, set_rule.env, r, r.env):
-                        print "unified!!"
-                        print r.env
-                        stack.append(r)
-                    else:
-                        print "not unified :("
                 else:
-                    print "set_rule != r"
-        else: #subgoals finished, check if there are parents who want to join
-            print "finished subgoals"
-            if(rule.parent):
-                print "finding parent"
-                if(unify(rule, rule.env, rule.parent.subgoals[rule.parent.index], rule.parent.env)):
-                    stack.append(rule.parent)
-                    rule.parent.index += 1
+
+                      # the variable is set, have to check if it is the same as sval
+
+                    if d_env.get(d_fact.args[i]) != sval:
+                        return True
+            elif d_fact.args[i] != sval:
+                return False
+
+    return True
+
+
+def search(fact, rulebase, added_rule=None):
+    global yes
+
+    yes = False
+
+    toprule = Toprule(Rule('a(b):-c(d)'))
+    toprule.rule.subgoals = [fact]
+    stack = [toprule]
+    while stack:
+        current_rule = stack.pop()
+        if current_rule.index >= len(current_rule.rule.subgoals):
+            if current_rule.parent == None:
+                if current_rule.env:
+                    for (key, value) in current_rule.env.iteritems():
+                        print key + ' = ' + value
+                    yes = True
+                else:
+                    print 'yes'
+                    yes = True
+                continue
+            parent = copy.deepcopy(current_rule.parent)
+            unify(current_rule.rule.goal, current_rule.env,
+                  parent.rule.subgoals[parent.index], parent.env)
+            parent.index += 1
+            stack.append(parent)
+            continue
+
+        fact = current_rule.rule.subgoals[current_rule.index]
+        for rule in rulebase:
+            if not isinstance(rule, Hypo):
+                if rule.goal.functor != fact.functor:
                     continue
-            else:
-                print "no parent"
-                print rule.env
-                return True
+                if len(rule.goal.args) != len(fact.args):
+                    continue
+                child = Toprule(rule, current_rule)
+                ans = unify(fact, current_rule.env, rule.goal,
+                            child.env)
+                if ans:
+                    stack.append(child)
+    if added_rule:
+        rulebase.remove(added_rule)
 
 
+def replace_char(string, chars):
+    '''
+    "hello", {"l": "a"} returns "heaao".
+    Useful for swapping variables.
+    '''
+
+    for k in chars:
+        string = re.sub(k, chars[k], string)
+    return string
 
 
+def hypo_search(query):
 
-    
+    fields = [f.replace(':-', '').strip() for f in query.split('=>')]
 
+    (goal, hypo) = (fields[0], fields[1])
 
+    hypo = hypo.split('),')
+
+    pregoal = (hypo[0])[1:] + ')'.strip()
+
+    rule = Rule(hypo[1].replace('))', ')').strip())
+
+    rulebase.append(rule)
+
+    search(Fact(pregoal), rulebase, rule)
 
 
 def gen_list(array, indices):
@@ -242,6 +251,7 @@ def gen_list(array, indices):
         new_list.append(array[i])
 
     return new_list
+
 
 def equal(arr1, arr2):
     """
@@ -261,10 +271,11 @@ def equal(arr1, arr2):
         if arr1[i].isupper():
             match[arr1[i]] = arr2[i]
 
-    return match
+    return (1, match)
 
 
-def parse(file=sys.argv[1]):
+def parse():
+    file = sys.argv[1]
     f = filter(lambda line: line.strip(), open(file))
 
     extension = file.split('.')[-1]
@@ -275,39 +286,52 @@ def parse(file=sys.argv[1]):
     for (linenumber, line) in enumerate(f):
         line = line.replace(' ', '').strip()
 
-        if line[-1]=='.': line=line[0:-1]
+        if line[-1] == '.':
+            line = line[0:-1]
 
         if not line[0].islower():
             continue
 
-        if ':-' in line:
-            rulebase.append(Rule(line))
-            rulebase_facts.append(Rule(line))
+        if '=>' in line:
+            rulebase.append(Hypo(line))
         else:
-            rulebase_facts.append(Fact(line))
-            facts.append(Fact(line))
+            rulebase.append(Rule(line))
 
 
 if __name__ == '__main__':
-    rulebase = []
-    facts = []
-    rulebase_facts = rulebase + facts
-    parse()
 
-    print 'Rules:'
-    for rule in rulebase:
-        print rule
-    print '\nFacts:'
-    for fact in facts:
-        print fact
+    rulebase = []
+    parse()
 
     print '\n'
     while True:
 
-        prompt = Fact(raw_input('? '))
+        prompt = raw_input('Query: ')
 
-        if search(prompt):
-            print "yes"
-            continue
+        for rule in rulebase:
+            if isinstance(rule, Hypo):
+                line = rule.string
 
-        print "no"
+                p = prompt.split('(')[0]
+
+                if p == rule.head.split('(')[0]:
+
+                    args = [i.strip() for i in prompt.split('('
+                            )[1].split(')')[0].split(',')]
+
+                    original_args = [i.strip() for i in
+                            rule.head.split('(')[1].split(')'
+                            )[0].split(',')]
+
+                    dictt = {}
+
+                    for i in range(len(original_args)):
+                        dictt[original_args[i]] = args[i]
+
+                    line = replace_char(line, dictt)
+
+                    if hypo_search(line):
+                        continue
+        else:
+
+            search(Fact(prompt), rulebase)

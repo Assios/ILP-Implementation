@@ -1,0 +1,6 @@
+take(brian, arch)
+take(brian, prog_lang)
+
+grad(A):- take(A, arch), take(A, prog_lang), take(A, os)
+
+neargrad(A, C):- =>(grad(A), take(A, C))
