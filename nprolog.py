@@ -26,6 +26,8 @@ class Fact:
         self.arity = len(self.args)
         self.unknowns = len([arg for arg in self.args if arg.isupper()])
         self.env = {}
+        self.index = 0
+        self.subgoals_count = 0
 
     def __str__(self):
         return self.functor + '(' + ', '.join(self.args) + ')'
@@ -83,7 +85,7 @@ def unify(s_fact, s_env, d_fact, d_env):
     """
 
 
-    if s_fact.args != d_fact.args or s_fact.functor != d_fact.functor: return 0
+    if len(s_fact.args) != len(d_fact.args) or s_fact.functor != d_fact.functor: return 0
 
     for i in range(len(s_fact.args)):
         #if not s_fact.args[i] is a variable, it is a constant
@@ -96,9 +98,12 @@ def unify(s_fact, s_env, d_fact, d_env):
             if (not d_env.get(d_fact.args[i])):
                 d_env[d_fact.args[i]] = sval
             else: #the variable is set, have to check if it is the same as sval
+                print "else in variable!!"
                 if (d_env.get(d_fact.args[i]) != sval):
+                    print "d_env.get(d_fact.args[i]) != sval"
                     return 0
         elif(d_fact.args[i] != s_fact.args[i]):
+            print "d_fact.args[i] != s_fact.args[i]"
             return 0
     return 1
 
@@ -212,6 +217,7 @@ def search(query, env={}):
                 print "finding parent"
                 if(unify(rule, rule.env, rule.parent.subgoals[rule.parent.index], rule.parent.env)):
                     stack.append(rule.parent)
+                    rule.parent.index += 1
                     continue
             else:
                 print "no parent"
