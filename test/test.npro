@@ -4,3 +4,6 @@ mother(mary,john)
 female(mary)
 
 cat(tom)
+mouse(jerry)
+
+eats(X,Y):- cat(X), mouse(Y)

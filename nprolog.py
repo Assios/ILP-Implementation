@@ -93,18 +93,19 @@ def unify(s_fact, s_env, d_fact, d_env):
             sval = s_env.get(s_fact.args[i])
         else:
             sval = s_fact.args[i]
-        if(d_fact.args[i].isupper()): #variable in dest
-            #if the variable is not set, set it from the sourceval
-            if (not d_env.get(d_fact.args[i])):
-                d_env[d_fact.args[i]] = sval
-            else: #the variable is set, have to check if it is the same as sval
-                print "else in variable!!"
-                if (d_env.get(d_fact.args[i]) != sval):
-                    print "d_env.get(d_fact.args[i]) != sval"
-                    return 0
-        elif(d_fact.args[i] != s_fact.args[i]):
-            print "d_fact.args[i] != s_fact.args[i]"
-            return 0
+        if(sval):
+            if(d_fact.args[i].isupper()): #variable in dest
+                #if the variable is not set, set it from the sourceval
+                if (not d_env.get(d_fact.args[i])):
+                    d_env[d_fact.args[i]] = sval
+                else: #the variable is set, have to check if it is the same as sval
+                    print "else in variable!!"
+                    if (d_env.get(d_fact.args[i]) != sval):
+                        print "d_env.get(d_fact.args[i]) != sval"
+                        return 0
+            elif(d_fact.args[i] != s_fact.args[i]):
+                print "d_fact.args[i] != s_fact.args[i]"
+                return 0
     return 1
 
 
@@ -206,6 +207,7 @@ def search(query, env={}):
                     print "set_rule == r"
                     if unify(set_rule, set_rule.env, r, r.env):
                         print "unified!!"
+                        print r.env
                         stack.append(r)
                     else:
                         print "not unified :("
