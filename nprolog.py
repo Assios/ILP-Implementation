@@ -25,9 +25,16 @@ class Fact:
         (self.functor, self.args) = (s[0], (s[1])[:-1].split(','))
         self.arity = len(self.args)
         self.unknowns = len([arg for arg in self.args if arg.isupper()])
+        self.env = {}
 
     def __str__(self):
         return self.functor + '(' + ', '.join(self.args) + ')'
+
+    def __eq__(self, other):
+        return (self.arity == other.arity and self.functor == other.functor)
+
+    def __hash__(self):
+        return id(self)
 
 
 class Rule:
@@ -75,29 +82,51 @@ def unify(s_fact, s_env, d_fact, d_env):
     Returns False if not possible.
     """
 
-    functor = fact.functor
-    args = fact.args
-    unknowns = fact.unknowns
-    response = False
 
-    if unknowns:
-        if d_fact.functor == s_fact.functor:
+    if s_fact.args != d_fact.args or s_fact.functor != d_fact.functor: return 0
 
-            var = equal(d_fact.args, s_fact.args)
+    for i in range(len(s_fact.args)):
+        #if not s_fact.args[i] is a variable, it is a constant
+        if s_fact.args[i].isupper():
+            sval = s_env.get(s_fact.args[i])
+        else:
+            sval = s_fact.args[i]
+        if(d_fact.args[i].isupper()): #variable in dest
+            #if the variable is not set, set it from the sourceval
+            if (not d_env.get(d_fact.args[i])):
+                d_env[d_fact.args[i]] = sval
+            else: #the variable is set, have to check if it is the same as sval
+                if (d_env.get(d_fact.args[i]) != sval):
+                    return 0
+        elif(d_fact.args[i] != s_fact.args[i]):
+            return 0
+    return 1
 
-            if var:
-                d_env.update(var)
 
-                for key, value in var.iteritems():
-                    print(key + " = " + value)
+    # functor = fact.functor
+    # args = fact.args
+    # unknowns = fact.unknowns
+    # response = False
 
-                response = True
-    else:
-        if s_fact.functor == d_fact.functor and s_fact.args == d_fact.args:
-            #update environment
-            return True
+    #     if d_fact.functor == s_fact.functor:
 
-    return response
+    #         var = equal(d_fact.args, s_fact.args)
+
+    #         if var:
+    #             d_env.update(var)
+
+    #             for key, value in var.iteritems():
+    #                 print(key + " = " + value)
+
+    #             response = True
+    # else:
+    #     if s_fact.functor == d_fact.functor and s_fact.args == d_fact.args:
+    #         #update environment
+    #         for arg in s_fact.args:
+
+    #         return True
+
+    # return response
 
 
 # def search(fact):
@@ -171,7 +200,12 @@ def search(query, env={}):
                 if set_rule == r:
                     print "set_rule == r"
                     if unify(set_rule, set_rule.env, r, r.env):
+                        print "unified!!"
                         stack.append(r)
+                    else:
+                        print "not unified :("
+                else:
+                    print "set_rule != r"
         else: #subgoals finished, check if there are parents who want to join
             print "finished subgoals"
             if(rule.parent):
