@@ -4,13 +4,9 @@
 import string
 import re
 import sys
-from time import sleep
 import copy
 
-# variables = {}
-
 rulebase = []
-yes = False
 
 
 class ParseError(Exception):
@@ -52,8 +48,7 @@ class Hypo:
 
         self.string = string
 
-        fields = [f.replace(':-', '').strip() for f in string.split('=>'
-                  )]
+        fields = [f.replace(':-', '').strip() for f in string.split('=>')]
 
         (self.goal, self.hypo) = (fields[0], fields[1])
 
@@ -78,6 +73,7 @@ class Rule:
         parent=None,
         env={},
         ):
+
         s = string.replace(' ', '').split(':-')
         self.goal = Fact(s[0])
         self.subgoals = []
@@ -125,6 +121,7 @@ class Toprule:
         parent=None,
         env={},
         ):
+
         self.rule = rule
         self.parent = parent
         self.env = copy.deepcopy(env)
@@ -174,9 +171,6 @@ def unify(
 
 
 def search(fact, rulebase, added_rule=None):
-    global yes
-
-    yes = False
 
     toprule = Toprule(Rule('a(b):-c(d)'))
     toprule.rule.subgoals = [fact]
@@ -188,10 +182,8 @@ def search(fact, rulebase, added_rule=None):
                 if current_rule.env:
                     for (key, value) in current_rule.env.iteritems():
                         print key + ' = ' + value
-                    yes = True
                 else:
                     print 'yes'
-                    yes = True
                 continue
             parent = copy.deepcopy(current_rule.parent)
             unify(current_rule.rule.goal, current_rule.env,
@@ -208,9 +200,7 @@ def search(fact, rulebase, added_rule=None):
                 if len(rule.goal.args) != len(fact.args):
                     continue
                 child = Toprule(rule, current_rule)
-                ans = unify(fact, current_rule.env, rule.goal,
-                            child.env)
-                if ans:
+                if unify(fact, current_rule.env, rule.goal, child.env):
                     stack.append(child)
     if added_rule:
         rulebase.remove(added_rule)
@@ -244,43 +234,12 @@ def hypo_search(query):
     search(Fact(pregoal), rulebase, rule)
 
 
-def gen_list(array, indices):
-    new_list = []
-
-    for i in indices:
-        new_list.append(array[i])
-
-    return new_list
-
-
-def equal(arr1, arr2):
-    """
-    Checks if all lowercase elements in the two lists are equal.
-    If they are, return a dictionary that maps the uppercase variables
-    in arr1 to the corresponding variable in arr2.
-    """
-
-    if len(arr1) != len(arr2):
-        return False
-
-    match = {}
-
-    for i in range(len(arr1)):
-        if arr1[i].islower() and arr1[i] != arr2[i]:
-            return False
-        if arr1[i].isupper():
-            match[arr1[i]] = arr2[i]
-
-    return (1, match)
-
-
-def parse():
-    file = sys.argv[1]
+def parse(file=sys.argv[1]):
     f = filter(lambda line: line.strip(), open(file))
 
     extension = file.split('.')[-1]
 
-    if extension != 'npro':
+    if extension != 'ilp':
         raise ParseError('Cannot parse .' + extension + '-files.')
 
     for (linenumber, line) in enumerate(f):
@@ -323,15 +282,14 @@ if __name__ == '__main__':
                             rule.head.split('(')[1].split(')'
                             )[0].split(',')]
 
-                    dictt = {}
+                    mapping = {}
 
                     for i in range(len(original_args)):
-                        dictt[original_args[i]] = args[i]
+                        mapping[original_args[i]] = args[i]
 
-                    line = replace_char(line, dictt)
+                    line = replace_char(line, mapping)
 
                     if hypo_search(line):
                         continue
         else:
-
             search(Fact(prompt), rulebase)
