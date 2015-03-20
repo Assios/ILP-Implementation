@@ -48,9 +48,10 @@ class Hypo:
 
         self.string = string
 
-        fields = [f.replace(':-', '').strip() for f in string.split('=>')]
+        fields = [f.replace(':-', '').strip() for f in string.split('=>'
+                  )]
 
-        (self.goal, self.hypo) = (fields[0], fields[1])
+        self.hypo = fields[1]
 
         self.head = fields[0]
 
